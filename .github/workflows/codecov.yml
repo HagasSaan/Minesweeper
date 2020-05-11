@@ -1,2 +1,16 @@
-- name: Codecov
-  uses: codecov/codecov-action@v1.0.7
+name: Codecov
+
+on:
+  push:
+    branches: 
+      - master  
+  pull_request:
+    branches: 
+      - master
+
+jobs:
+  codecov:
+    runs-on: ubuntu-latest
+    steps:
+      - name: codecov
+        uses: codecov/codecov-action@v1.0.7
