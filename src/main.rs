@@ -70,15 +70,18 @@ fn main() {
         let (game_result, message) = game_field.process_command_args(args);
         match game_result {
             GameResult::Stop => {
+                // println!("Game played: {:?}", game_field.start_time.elapsed());
                 println!("Game stopped. Have a nice day!");
                 println!("{}", game_field.draw(true));
                 break;
             }
             GameResult::Win => {
+                // println!("Game played: {:?}", game_field.start_time.elapsed());
                 println!("Congratulations! You won!");
                 break;
             }
             GameResult::Lose => {
+                // println!("Game played: {:?}", game_field.start_time.elapsed());
                 println!("You lose...Try to search mines more carefully next time");
                 println!("{}", game_field.draw(true));
                 break;

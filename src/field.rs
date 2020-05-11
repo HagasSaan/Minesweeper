@@ -1,9 +1,9 @@
+use crate::cell::{Cell, CellStatus};
 use crate::mark::Mark;
 use rand::prelude::*;
+use serde::{Deserialize, Serialize};
+// use std::time;
 use std::vec::Vec;
-
-use crate::cell::{Cell, CellStatus};
-
 #[derive(Debug)]
 pub enum GameResult {
     Win,
@@ -27,12 +27,13 @@ const NEIGHBORS_SHIFTS: [(i8, i8); 8] = [
     (1, 1),
 ];
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Field {
     size: usize,
     cells: Vec<Vec<Cell>>,
     mines_count: i16,
     closed_safe_cells_count: i16,
+    // pub start_time: time::Instant,
 }
 
 impl Field {
@@ -83,6 +84,7 @@ impl Field {
             cells: cells,
             mines_count: mines_count,
             closed_safe_cells_count: closed_safe_cells_count,
+            // start_time: time::Instant::now(),
         }
     }
 
@@ -159,7 +161,7 @@ impl Field {
     }
     pub fn process_command_args(&mut self, args: Vec<&str>) -> (GameResult, &str) {
         match args[0] {
-            "stop" => (GameResult::Stop, ""),
+            "stop" => (GameResult::Stop, ""), //format!("{:?}", self.start_time.elapsed())
             "open" => match args[1].parse() {
                 Ok(x) => match args[2].parse() {
                     Ok(y) => (self.open_cell(x, y), ""),
@@ -171,11 +173,11 @@ impl Field {
                 Ok(x) => match args[2].parse() {
                     Ok(y) => {
                         let mark_as = match args[3] {
-                            "empty" => Mark::Empty,
                             "unknown" => Mark::Unknown,
                             "mine" => Mark::Mine,
+                            "empty" => Mark::Empty,
                             _ => {
-                                println!("Unknown mark type. Marked as empty");
+                                error!("Unknown mark type. Marked as empty");
                                 Mark::Empty
                             }
                         };
@@ -190,11 +192,19 @@ impl Field {
         }
     }
 
-    // pub fn restore_field_from_string(field: String) -> Self {
-    //     unimplemented!();
-    // }
+    pub fn restore_field_from_bin(serialized_field: Vec<u8>) -> Self {
+        bincode::deserialize(&serialized_field).unwrap()
+    }
 
-    // pub fn dump_field_to_string(&self) -> String {
-    //     unimplemented!();
-    // }
+    pub fn dump_field_to_bin(&self) -> Vec<u8> {
+        bincode::serialize(&self).unwrap()
+    }
+}
+
+#[test]
+fn save_and_restore_field() {
+    let field = Field::new(10);
+    let serialized_field = field.dump_field_to_bin();
+    let deserialized_field = Field::restore_field_from_bin(serialized_field);
+    assert_eq!(field, deserialized_field);
 }

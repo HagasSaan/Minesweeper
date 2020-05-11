@@ -1,4 +1,5 @@
 use crate::mark::Mark;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq)]
 pub enum CellStatus {
@@ -7,7 +8,7 @@ pub enum CellStatus {
     Marked,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
 pub struct Cell {
     pub is_mine: bool,
     pub opened: bool,
