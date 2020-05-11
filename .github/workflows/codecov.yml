@@ -12,5 +12,5 @@ jobs:
   codecov:
     runs-on: ubuntu-latest
     steps:
-      - name: codecov
-        uses: codecov/codecov-action@v1.0.7
+    - uses: actions/checkout@master
+    - uses: codecov/codecov-action@v1
