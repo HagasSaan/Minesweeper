@@ -1,13 +1,13 @@
 use crate::mark::Mark;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum CellStatus {
     Mine,
     Safe,
     Marked,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Cell {
     pub is_mine: bool,
     pub opened: bool,
@@ -38,4 +38,39 @@ impl Cell {
         }
         CellStatus::Marked
     }
+}
+
+#[test]
+fn cell_creation() {
+    let cell = Cell::new(true);
+    assert_eq!(cell.is_mine, true);
+    assert_eq!(cell.opened, false);
+    assert_eq!(cell.mines_neighbors_count, -1);
+    assert_eq!(cell.marked_as, Mark::Empty);
+}
+
+#[test]
+fn cell_opening_mine() {
+    let mut cell = Cell::new(true);
+    assert_eq!(cell.is_mine, true);
+    assert_eq!(cell.opened, false);
+    assert_eq!(cell.open(), CellStatus::Mine);
+    assert_eq!(cell.opened, true);
+}
+
+#[test]
+fn cell_opening_safe() {
+    let mut cell = Cell::new(false);
+    assert_eq!(cell.is_mine, false);
+    assert_eq!(cell.opened, false);
+    assert_eq!(cell.open(), CellStatus::Safe);
+    assert_eq!(cell.opened, true);
+}
+
+#[test]
+fn cell_mark() {
+    let mut cell = Cell::new(false);
+    assert_eq!(cell.marked_as, Mark::Empty);
+    assert_eq!(cell.mark(Mark::Mine), CellStatus::Marked);
+    assert_eq!(cell.marked_as, Mark::Mine);
 }
