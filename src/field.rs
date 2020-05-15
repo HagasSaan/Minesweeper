@@ -2,6 +2,7 @@ use crate::cell::{Cell, CellStatus};
 use crate::mark::Mark;
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::io;
 // use std::time;
 use std::vec::Vec;
 #[derive(Debug)]
@@ -12,6 +13,13 @@ pub enum GameResult {
     Stop,
     Info,
     Error,
+}
+
+#[derive(Debug)]
+pub enum GameUI {
+    TUI,
+    GUI,
+    WUI,
 }
 
 pub const FIELD_DEFAULT_SIZE: usize = 10;
@@ -33,7 +41,7 @@ pub struct Field {
     cells: Vec<Vec<Cell>>,
     mines_count: i16,
     closed_safe_cells_count: i16,
-    // pub start_time: time::Instant,
+    // start_time: time::Instant,
 }
 
 impl Field {
@@ -88,21 +96,21 @@ impl Field {
         }
     }
 
-    pub fn draw(&self, opened: bool) -> String {
+    fn draw(&self, opened: bool) -> String {
         let mut result: String = "".to_string();
         for row_idx in 0..self.size {
             for col_idx in 0..self.size {
                 let cell = {
                     if self.cells[row_idx][col_idx].opened || opened {
                         if self.cells[row_idx][col_idx].is_mine {
-                            Mark::Mine.value()
+                            Mark::Mine.to_string()
                         } else {
                             self.cells[row_idx][col_idx]
                                 .mines_neighbors_count
                                 .to_string()
                         }
                     } else {
-                        self.cells[row_idx][col_idx].marked_as.value()
+                        self.cells[row_idx][col_idx].marked_as.to_string()
                     }
                 };
                 result.push_str(&cell);
@@ -112,7 +120,7 @@ impl Field {
         result
     }
 
-    pub fn open_cell(&mut self, x: usize, y: usize) -> GameResult {
+    fn open_cell(&mut self, x: usize, y: usize) -> GameResult {
         let result = self.cells[x][y].open();
         let game_result = self.game_status(result);
         match game_result {
@@ -141,7 +149,7 @@ impl Field {
         game_result
     }
 
-    pub fn mark_cell(&mut self, x: usize, y: usize, mark_as: Mark) -> GameResult {
+    fn mark_cell(&mut self, x: usize, y: usize, mark_as: Mark) -> GameResult {
         let cell_status = self.cells[x][y].mark(mark_as);
         self.game_status(cell_status)
     }
@@ -159,7 +167,7 @@ impl Field {
             CellStatus::Mine => GameResult::Lose,
         }
     }
-    pub fn process_command_args(&mut self, args: Vec<&str>) -> (GameResult, &str) {
+    fn process_command_args(&mut self, args: Vec<&str>) -> (GameResult, &str) {
         match args[0] {
             "stop" => (GameResult::Stop, ""), //format!("{:?}", self.start_time.elapsed())
             "open" => match args[1].parse() {
@@ -172,15 +180,7 @@ impl Field {
             "mark" => match args[1].parse() {
                 Ok(x) => match args[2].parse() {
                     Ok(y) => {
-                        let mark_as = match args[3] {
-                            "unknown" => Mark::Unknown,
-                            "mine" => Mark::Mine,
-                            "empty" => Mark::Empty,
-                            _ => {
-                                error!("Unknown mark type. Marked as empty");
-                                Mark::Empty
-                            }
-                        };
+                        let mark_as = Mark::to_mark(args[3]);
                         (self.mark_cell(x, y, mark_as), "")
                     }
                     Err(_) => (GameResult::Error, "Integer for coord x expected"),
@@ -192,12 +192,63 @@ impl Field {
         }
     }
 
-    pub fn restore_field_from_bin(serialized_field: Vec<u8>) -> Self {
+    fn restore_field_from_bin(serialized_field: Vec<u8>) -> Self {
         bincode::deserialize(&serialized_field).unwrap()
     }
 
-    pub fn dump_field_to_bin(&self) -> Vec<u8> {
+    fn dump_field_to_bin(&self) -> Vec<u8> {
         bincode::serialize(&self).unwrap()
+    }
+
+    fn play_via_tui(&mut self) {
+        loop {
+            println!("{}", self.draw(false));
+            let mut action = String::new();
+            io::stdin()
+                .read_line(&mut action)
+                .expect("Failed to read line");
+            action = action[..action.len() - 1].to_string(); //strip \n at end of line
+            let args = action.split(" ").collect::<Vec<&str>>();
+
+            debug!("{:?}", args);
+            let (game_result, message) = self.process_command_args(args);
+            match game_result {
+                GameResult::Stop => {
+                    println!("Game stopped. Have a nice day!");
+                    println!("{}", self.draw(true));
+                    break;
+                }
+                GameResult::Win => {
+                    println!("Congratulations! You won!");
+                    break;
+                }
+                GameResult::Lose => {
+                    println!("You lose...Try to search mines more carefully next time");
+                    println!("{}", self.draw(true));
+                    break;
+                }
+                GameResult::Info => println!("Info: {}", message),
+                GameResult::Error => println!("Error: {}", message),
+                GameResult::Play => (),
+            }
+        }
+        // println!("Game played: {:?}", self.start_time.elapsed());
+    }
+
+    fn play_via_gui(&mut self) {
+        unimplemented!();
+    }
+
+    fn play_via_wui(&mut self) {
+        unimplemented!();
+    }
+
+    pub fn play_via(&mut self, game_ui: GameUI) {
+        match game_ui {
+            GameUI::TUI => self.play_via_tui(),
+            GameUI::GUI => self.play_via_gui(),
+            GameUI::WUI => self.play_via_wui(),
+        }
     }
 }
 
@@ -207,4 +258,14 @@ fn save_and_restore_field() {
     let serialized_field = field.dump_field_to_bin();
     let deserialized_field = Field::restore_field_from_bin(serialized_field);
     assert_eq!(field, deserialized_field);
+}
+
+#[test]
+fn mark_cell() {
+    unimplemented!();
+}
+
+#[test]
+fn mark_cell_unexpected() {
+    unimplemented!();
 }

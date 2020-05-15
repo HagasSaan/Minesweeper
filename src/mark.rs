@@ -7,7 +7,7 @@ pub enum Mark {
     Unknown,
 }
 impl Mark {
-    pub fn value(&self) -> String {
+    pub fn to_string(&self) -> String {
         match *self {
             Mark::Empty => "*",
             Mark::Mine => "M",
@@ -15,4 +15,25 @@ impl Mark {
         }
         .to_string()
     }
+    pub fn to_mark(value: &str) -> Mark {
+        match value {
+            "*" => Mark::Empty,
+            "M" => Mark::Mine,
+            "?" => Mark::Unknown,
+            _ => {
+                error!("Unknown mark type, marked as empty");
+                Mark::Empty
+            }
+        }
+    }
+}
+
+#[test]
+fn string_to_mark() {
+    unimplemented!();
+}
+
+#[test]
+fn mark_to_string() {
+    unimplemented!();
 }

@@ -4,13 +4,11 @@ use clap::{crate_version, App, Arg};
 extern crate log;
 extern crate simple_logger;
 
-use std::io;
-
 mod cell;
 mod field;
 mod mark;
 
-use field::{Field, GameResult, FIELD_DEFAULT_SIZE};
+use field::{Field, GameUI, FIELD_DEFAULT_SIZE};
 
 fn main() {
     let matches = App::new("Minesweeper")
@@ -27,7 +25,15 @@ fn main() {
             Arg::with_name("debug")
                 .short("d")
                 .long("debug")
-                .help("Set debug"),
+                .help("Set debug for looking at internal messages"),
+        )
+        .arg(
+            // rework with enum in future
+            // https://github.com/clap-rs/clap/blob/master/examples/13_enum_values.rs
+            Arg::with_name("game mode")
+                .short("m")
+                .long("mode")
+                .help("Select gamemode (tui,"),
         )
         .get_matches();
 
@@ -56,40 +62,13 @@ fn main() {
     let mut game_field: Field = Field::new(field_size);
     debug!("Field created: {:?} ", game_field);
 
+    let game_mode = match matches.value_of("game mode") {
+        Some("tui") => GameUI::TUI,
+        Some("gui") => GameUI::GUI,
+        Some("wui") => GameUI::WUI,
+        _ => GameUI::TUI,
+    };
     info!("Game started");
-    loop {
-        println!("{}", game_field.draw(false));
-        let mut action = String::new();
-        io::stdin()
-            .read_line(&mut action)
-            .expect("Failed to read line");
-        action = action[..action.len() - 1].to_string(); //strip \n at end of line
-        let args = action.split(" ").collect::<Vec<&str>>();
-
-        debug!("{:?}", args);
-        let (game_result, message) = game_field.process_command_args(args);
-        match game_result {
-            GameResult::Stop => {
-                // println!("Game played: {:?}", game_field.start_time.elapsed());
-                println!("Game stopped. Have a nice day!");
-                println!("{}", game_field.draw(true));
-                break;
-            }
-            GameResult::Win => {
-                // println!("Game played: {:?}", game_field.start_time.elapsed());
-                println!("Congratulations! You won!");
-                break;
-            }
-            GameResult::Lose => {
-                // println!("Game played: {:?}", game_field.start_time.elapsed());
-                println!("You lose...Try to search mines more carefully next time");
-                println!("{}", game_field.draw(true));
-                break;
-            }
-            GameResult::Info => println!("Info: {}", message),
-            GameResult::Error => println!("Error: {}", message),
-            GameResult::Play => (),
-        }
-    }
+    game_field.play_via(game_mode);
     info!("Game stopped");
 }
