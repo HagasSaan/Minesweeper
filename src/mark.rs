@@ -29,11 +29,13 @@ impl Mark {
 }
 
 #[test]
-fn string_to_mark() {
+#[ignore]
+fn mark_from_string() {
     unimplemented!();
 }
 
 #[test]
+#[ignore]
 fn mark_to_string() {
     unimplemented!();
 }
