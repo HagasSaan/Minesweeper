@@ -280,10 +280,7 @@ fn save_and_restore_field() {
 
 #[test]
 fn mark_cell() {
-    unimplemented!();
-}
-
-#[test]
-fn mark_cell_unexpected() {
-    unimplemented!();
+    let mut field = Field::new(3);
+    field.mark_cell(0, 0, Mark::Mine);
+    assert_eq!(field.cells[0][0].marked_as, Mark::Mine);
 }

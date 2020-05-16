@@ -7,8 +7,8 @@ pub enum Mark {
     Unknown,
 }
 impl Mark {
-    pub fn to_string(&self) -> String {
-        match *self {
+    pub fn to_string(self) -> String {
+        match self {
             Mark::Empty => "*",
             Mark::Mine => "M",
             Mark::Unknown => "?",
@@ -29,13 +29,16 @@ impl Mark {
 }
 
 #[test]
-#[ignore]
 fn mark_from_string() {
-    unimplemented!();
+    assert_eq!(Mark::Empty.to_string(), "*");
+    assert_eq!(Mark::Mine.to_string(), "M");
+    assert_eq!(Mark::Unknown.to_string(), "?");
 }
 
 #[test]
-#[ignore]
 fn mark_to_string() {
-    unimplemented!();
+    assert_eq!(Mark::from_string("*"), Mark::Empty);
+    assert_eq!(Mark::from_string("M"), Mark::Mine);
+    assert_eq!(Mark::from_string("?"), Mark::Unknown);
+    assert_eq!(Mark::from_string("wrong value"), Mark::Empty);
 }
