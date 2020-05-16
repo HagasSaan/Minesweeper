@@ -15,7 +15,7 @@ impl Mark {
         }
         .to_string()
     }
-    pub fn to_mark(value: &str) -> Mark {
+    pub fn from_string(value: &str) -> Mark {
         match value {
             "*" => Mark::Empty,
             "M" => Mark::Mine,

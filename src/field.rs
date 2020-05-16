@@ -2,6 +2,7 @@ use crate::cell::{Cell, CellStatus};
 use crate::mark::Mark;
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::fs;
 use std::io;
 // use std::time;
 use std::vec::Vec;
@@ -180,7 +181,7 @@ impl Field {
             "mark" => match args[1].parse() {
                 Ok(x) => match args[2].parse() {
                     Ok(y) => {
-                        let mark_as = Mark::to_mark(args[3]);
+                        let mark_as = Mark::from_string(args[3]);
                         (self.mark_cell(x, y, mark_as), "")
                     }
                     Err(_) => (GameResult::Error, "Integer for coord x expected"),
@@ -188,16 +189,33 @@ impl Field {
                 Err(_) => (GameResult::Error, "Integer for coord y expected"),
             },
             "help" => (GameResult::Info, "here must be help about program"),
+            "save" => {
+                self.save_to_file(args[1].to_string());
+                (GameResult::Info, "Game saved")
+            }
+            "load" => {
+                *self = self.load_from_file(args[1].to_string());
+                (GameResult::Info, "Game loaded")
+            }
             _ => (GameResult::Error, "Unknown command"),
         }
     }
 
-    fn restore_field_from_bin(serialized_field: Vec<u8>) -> Self {
+    fn restore_from_binary(serialized_field: Vec<u8>) -> Self {
         bincode::deserialize(&serialized_field).unwrap()
     }
 
-    fn dump_field_to_bin(&self) -> Vec<u8> {
+    fn dump_to_binary(&self) -> Vec<u8> {
         bincode::serialize(&self).unwrap()
+    }
+    fn save_to_file(&self, filename: String) {
+        let serialized_field = self.dump_to_binary();
+        fs::write(filename + ".ms", serialized_field).expect("Unable to save");
+    }
+
+    fn load_from_file(&self, filename: String) -> Field {
+        let serialized_field = fs::read(filename + ".ms").expect("Unable to load");
+        Field::restore_from_binary(serialized_field)
     }
 
     fn play_via_tui(&mut self) {
@@ -207,7 +225,7 @@ impl Field {
             io::stdin()
                 .read_line(&mut action)
                 .expect("Failed to read line");
-            action = action[..action.len() - 1].to_string(); //strip \n at end of line
+            action = action.trim().to_string(); //strip \n at end of line
             let args = action.split(" ").collect::<Vec<&str>>();
 
             debug!("{:?}", args);
@@ -255,8 +273,8 @@ impl Field {
 #[test]
 fn save_and_restore_field() {
     let field = Field::new(10);
-    let serialized_field = field.dump_field_to_bin();
-    let deserialized_field = Field::restore_field_from_bin(serialized_field);
+    let serialized_field = field.dump_to_binary();
+    let deserialized_field = Field::restore_from_binary(serialized_field);
     assert_eq!(field, deserialized_field);
 }
 
